@@ -1,3 +1,4 @@
 gym==0.21.0
 autopep8==1.6.0
 stable_baselines3==1.5.0
+tensorboard==2.8.0
