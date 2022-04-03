@@ -12,7 +12,8 @@ class ConnectFourEnv(gym.Env):
         super(ConnectFourEnv, self).__init__()
 
         # Describe the observation space
-        self.observation_space = Box(low=-1, high=1, shape=(6, 7), dtype=int)
+        # self.observation_space = Box(low=-1, high=1, shape=(6, 7), dtype=int)
+        self.observation_space = Box(low=-1, high=1, shape=(42, ), dtype=int)
 
         self.num_envs = 1
 
@@ -22,6 +23,16 @@ class ConnectFourEnv(gym.Env):
         # Custom members to keep track of the states
         self.__board = np.zeros((6, 7))
         self.__current_player = 1
+    
+    def get_flatten_board(self):
+        """
+        Flatten the board into 1D space for stable-baselines3 algorithms to work        
+        """
+        flat = np.zeros((42, ), dtype=int)
+        for row in range(len(self.__board)):
+            for col in range(len(self.__board[row])):
+                np.append(flat, self.__board[row][col])
+        return flat
 
     def step(self, action):
         """
@@ -53,7 +64,7 @@ class ConnectFourEnv(gym.Env):
             done = True
         
         self.__current_player = -self.__current_player
-        return self.__board, reward, done, {}
+        return self.get_flatten_board(), reward, done, {}
 
     def check_win(self) -> bool:
         """
@@ -101,8 +112,7 @@ class ConnectFourEnv(gym.Env):
         Reset the board
         :returns: numpy.array(6,7) board state after its being reset
         """
-        self.__board = np.zeros((6, 7), dtype=int)
-        return self.__board
+        return self.get_flatten_board()
 
     def render(self):
         """
