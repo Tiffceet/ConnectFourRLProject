@@ -46,7 +46,7 @@ class ConnectFourEnv(gym.Env):
 
         # Check for draw
         if np.count_nonzero(self.__board[0]) == 7:
-            reward = 0
+            reward = 0.5
         # Else Check for win
         elif self.check_win():
             reward = self.__current_player
