@@ -21,7 +21,7 @@ def verifyEnv():
 def train():
     # model = A2C('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
     model = A2C.load(a2c_path, env=env)
-    model.learn(total_timesteps=50000)
+    model.learn(total_timesteps=1000000)
     model.save(a2c_path)
 
 
