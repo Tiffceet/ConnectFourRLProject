@@ -1,6 +1,7 @@
 from gym.spaces import Discrete, Box, Dict, Tuple, MultiBinary, MultiDiscrete
 import gym
 import numpy as np
+from typing import Optional
 
 
 class ConnectFourEnv(gym.Env):
@@ -12,6 +13,8 @@ class ConnectFourEnv(gym.Env):
 
         # Describe the observation space
         self.observation_space = Box(low=-1, high=1, shape=(6, 7), dtype=int)
+
+        self.num_envs = 1
 
         # Describe possible actions (Player can insert in column 1 to 7)
         self.action_space = Discrete(7)
@@ -98,7 +101,7 @@ class ConnectFourEnv(gym.Env):
         Reset the board
         :returns: numpy.array(6,7) board state after its being reset
         """
-        self.__board = np.zeros((6, 7))
+        self.__board = np.zeros((6, 7), dtype=int)
         return self.__board
 
     def render(self):
