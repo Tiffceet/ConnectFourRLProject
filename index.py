@@ -28,6 +28,16 @@ def load_model():
     model = A2C.load(a2c_path, env=env)
     print(model.predict([0]*42))
 
+def sample_game():
+    model = A2C.load(a2c_path, env=env)
+    while True:
+        action = model.predict(env.get_flatten_board())[0]
+        env.step(action)
+        env.render()
+    
+        p_move = int(input())
+        env.step(p_move)
+
 # verifyEnv()
-load_model()
+sample_game()
 # train()
