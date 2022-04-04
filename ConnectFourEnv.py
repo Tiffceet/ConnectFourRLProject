@@ -4,6 +4,8 @@ import numpy as np
 from typing import Optional
 import pygame
 from time import sleep
+
+
 class ConnectFourEnv(gym.Env):
     def __init__(self):
         """
@@ -15,10 +17,10 @@ class ConnectFourEnv(gym.Env):
         # self.observation_space = Box(low=-1, high=1, shape=(6, 7), dtype=int)
         self.observation_space = Box(low=-1, high=1, shape=(42, ), dtype=int)
 
-        self.num_envs = 1
-
         # Describe possible actions (Player can insert in column 1 to 7)
         self.action_space = Discrete(7)
+
+        self.num_envs = 1
 
         # Custom members to keep track of the states
         self.__board = np.zeros((6, 7))
@@ -49,6 +51,14 @@ class ConnectFourEnv(gym.Env):
         if action < 0 or action > 6:
             raise Exception("Invalid action")
 
+        # Do nothing if the AI placed pieces at invalid action
+        if not self.is_valid_action(action):
+            reward = -10
+            # self.__invalid_action_counter += 1
+            # if self.__invalid_action_counter > 20:
+            return self.get_flatten_board(), reward, True, {}
+            # return self.get_flatten_board(), reward, done, {}
+
         # Check and perform action
         for index in list(reversed(range(6))):
             if self.__board[index][action] == 0:
@@ -60,11 +70,24 @@ class ConnectFourEnv(gym.Env):
             reward = 0.5
         # Else Check for win
         elif self.check_win():
-            reward = self.__current_player
+            if self.__current_player == 1:
+                reward = 10
+            else:
+                reward = -10
             done = True
 
         self.__current_player = -self.__current_player
         return self.get_flatten_board(), reward, done, {}
+
+    def is_valid_action(self, action: int) -> bool:
+        return self.__board[0][action] == 0
+
+    def get_available_moves(self):
+        moves = np.array([], dtype=int)
+        for x in range(7):
+            if self.is_valid_action(x):
+                moves = np.append(moves, x)
+        return moves
 
     def check_win(self) -> bool:
         """
@@ -112,6 +135,8 @@ class ConnectFourEnv(gym.Env):
         Reset the board
         :returns: numpy.array(6,7) board state after its being reset
         """
+        self.__board = np.zeros((6, 7))
+        self.__current_player = 1
         return self.get_flatten_board()
 
     def draw_board(self, board):
@@ -156,12 +181,12 @@ class ConnectFourEnv(gym.Env):
                         c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
         pygame.display.update()
 
-    def render(self, mode = 'human'):
+    def render(self, mode='human'):
         """
         To render the board.
         """
         self.draw_board(np.flip(self.__board, 0))
-        sleep(1)
+        sleep(0.1)
         pass
 
     def close(self):

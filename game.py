@@ -7,7 +7,7 @@ from ConnectFourEnv import ConnectFourEnv
 from gym.wrappers import FlattenObservation
 import gym
 import os
-from stable_baselines3 import A2C
+from stable_baselines3 import A2C, DQN
 from stable_baselines3.common.vec_env import VecFrameStack
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.env_checker import check_env
@@ -17,7 +17,8 @@ env = ConnectFourEnv()
 # env = FlattenObservation(env)
 log_path = os.path.join('Training', 'Logs')
 a2c_path = os.path.join('Training', 'Saved Models', 'C4')
-ai_model = A2C.load(a2c_path, env=env)
+dqn_path = os.path.join('Training', 'Saved Models', 'C4_DQN')
+ai_model = DQN.load(dqn_path, env=env)
 
 BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
