@@ -2,8 +2,8 @@ from gym.spaces import Discrete, Box, Dict, Tuple, MultiBinary, MultiDiscrete
 import gym
 import numpy as np
 from typing import Optional
-
-
+import pygame
+from time import sleep
 class ConnectFourEnv(gym.Env):
     def __init__(self):
         """
@@ -23,7 +23,7 @@ class ConnectFourEnv(gym.Env):
         # Custom members to keep track of the states
         self.__board = np.zeros((6, 7))
         self.__current_player = 1
-    
+
     def get_flatten_board(self):
         """
         Flatten the board into 1D space for stable-baselines3 algorithms to work        
@@ -62,7 +62,7 @@ class ConnectFourEnv(gym.Env):
         elif self.check_win():
             reward = self.__current_player
             done = True
-        
+
         self.__current_player = -self.__current_player
         return self.get_flatten_board(), reward, done, {}
 
@@ -114,11 +114,54 @@ class ConnectFourEnv(gym.Env):
         """
         return self.get_flatten_board()
 
-    def render(self):
+    def draw_board(self, board):
+        BLUE = (0, 0, 255)
+        BLACK = (0, 0, 0)
+        RED = (255, 0, 0)
+        YELLOW = (255, 255, 0)
+
+        ROW_COUNT = 6
+        COLUMN_COUNT = 7
+
+        PLAYER = 0
+        AI = 1
+
+        EMPTY = 0
+        PLAYER_PIECE = -1
+        AI_PIECE = 1
+        SQUARESIZE = 100
+
+        width = COLUMN_COUNT * SQUARESIZE
+        height = (ROW_COUNT+1) * SQUARESIZE
+
+        size = (width, height)
+
+        RADIUS = int(SQUARESIZE/2 - 5)
+
+        screen = pygame.display.set_mode(size)
+        for c in range(COLUMN_COUNT):
+            for r in range(ROW_COUNT):
+                pygame.draw.rect(screen, BLUE, (c*SQUARESIZE, r *
+                                                SQUARESIZE+SQUARESIZE, SQUARESIZE, SQUARESIZE))
+                pygame.draw.circle(screen, BLACK, (int(
+                    c*SQUARESIZE+SQUARESIZE/2), int(r*SQUARESIZE+SQUARESIZE+SQUARESIZE/2)), RADIUS)
+
+        for c in range(COLUMN_COUNT):
+            for r in range(ROW_COUNT):
+                if board[r][c] == PLAYER_PIECE:
+                    pygame.draw.circle(screen, RED, (int(
+                        c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
+                elif board[r][c] == AI_PIECE:
+                    pygame.draw.circle(screen, YELLOW, (int(
+                        c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
+        pygame.display.update()
+
+    def render(self, mode = 'human'):
         """
         To render the board.
         """
-        print(self.__board)
+        self.draw_board(np.flip(self.__board, 0))
+        sleep(1)
         pass
 
     def close(self):
