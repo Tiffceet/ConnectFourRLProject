@@ -20,16 +20,16 @@ def verifyEnv():
 
 def train():
     # model = A2C('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
-    model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
-    # model = A2C.load(a2c_path, env=env)
+    # model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
     # model = DQN('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
-    # model = DQN.load(dqn_path, env=env)
-    model.learn(total_timesteps=25000, )
-    model.save(a2c_path)
+    # model = A2C.load(a2c_path, env=env)
+    model = DQN.load(dqn_path, env=env)
+    model.learn(total_timesteps=500000)
+    model.save(dqn_path)
 
 
 def load_model():
-    model = A2C.load(a2c_path, env=env)
+    model = DQN.load(dqn_path, env=env)
     print(model.predict([0]*42))
 
 def sample_game():
@@ -38,13 +38,21 @@ def sample_game():
         action = model.predict(env.get_flatten_board())[0]
         env.step(action)
         env.render()
-    
-        p_move = int(input())
+
+        if env.check_win():
+            break
+
+        p_move = model.predict(env.get_flatten_board())[0]
         env.step(p_move)
+        env.render()
+
+        if env.check_win():
+            break
+    input()
 
 # verifyEnv()
-# sample_game()
+sample_game()
 # train()
 # model = DQN.load(dqn_path, env=env)
-model = PPO.load(a2c_path, env=env)
-print(evaluate_policy(model, env, n_eval_episodes=10, render=True))
+# model = PPO.load(ppo_path, env=env)
+# print(evaluate_policy(model, env, n_eval_episodes=10, render=True))
