@@ -25,15 +25,19 @@ class ConnectFourEnv(gym.Env):
         # Custom members to keep track of the states
         self.__board = np.zeros((6, 7))
         self.__current_player = 1
+        self.__flipped = False
 
-    def get_flatten_board(self):
+    def get_flatten_board(self, flip_players = False):
         """
         Flatten the board into 1D space for stable-baselines3 algorithms to work        
         """
-        flat = np.zeros((42, ), dtype=int)
-        for row in range(len(self.__board)):
-            for col in range(len(self.__board[row])):
-                np.append(flat, self.__board[row][col])
+        flat = self.__board.flatten()
+        if flip_players:
+            for x in range(len(flat)):
+                if flat[x] == 1:
+                    flat[x] = -1
+                elif flat[x] == -1:
+                    flat[x] = 1
         return flat
 
     def step(self, action):
@@ -56,7 +60,7 @@ class ConnectFourEnv(gym.Env):
             reward = -10
             # self.__invalid_action_counter += 1
             # if self.__invalid_action_counter > 20:
-            return self.get_flatten_board(), reward, True, {}
+            return self.get_flatten_board(self.__flipped), reward, done, {}
             # return self.get_flatten_board(), reward, done, {}
 
         # Check and perform action
@@ -71,13 +75,14 @@ class ConnectFourEnv(gym.Env):
         # Else Check for win
         elif self.check_win():
             if self.__current_player == 1:
-                reward = 10
+                reward = 1
             else:
-                reward = -10
+                reward = -1
             done = True
 
         self.__current_player = -self.__current_player
-        return self.get_flatten_board(), reward, done, {}
+        self.__flipped = not self.__flipped
+        return self.get_flatten_board(not self.__flipped), reward, done, {}
 
     def is_valid_action(self, action: int) -> bool:
         return self.__board[0][action] == 0
