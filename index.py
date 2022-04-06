@@ -23,10 +23,10 @@ def verifyEnv():
 def train():
     # model = A2C('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
     # model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
-    model = DQN('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
+    # model = DQN('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
     # model = A2C.load(a2c_path, env=env)
-    # model = DQN.load(dqn_path, env=env)
-    model.learn(total_timesteps=100000)
+    model = DQN.load(dqn_path, env=env)
+    model.learn(total_timesteps=1)
     model.save(dqn_path)
 
 
@@ -39,7 +39,7 @@ def sample_game():
     match_count = 0
     win = 0
     lose = 0
-    while match_count <= 100:
+    while match_count <= 10000:
         while True:
             action = model.predict(env.get_flatten_board())[0]
             env.step(action)

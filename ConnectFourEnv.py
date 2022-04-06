@@ -25,8 +25,6 @@ class ConnectFourEnv(gym.Env):
         self.__current_player = 1
         self.__flipped = False
         self.__invalid_action_counter = 0
-        self.win = 0
-        self.lose = 0
 
     def get_flatten_board(self, flip_players=False):
         """
@@ -75,14 +73,11 @@ class ConnectFourEnv(gym.Env):
             reward = 0.5
         # Else Check for win
         elif self.check_win():
-            self.win += 1
             reward = 1
             done = True
         # Check if opponent can win next move
         elif self.check_future_win():
-            self.lose += 1
             reward = -1
-            done = True
 
         self.__current_player = -self.__current_player
         self.__flipped = not self.__flipped
@@ -261,7 +256,7 @@ class ConnectFourEnv(gym.Env):
         """
         
         self.draw_board(np.flip(self.__board, 0))
-        # sleep(0.1)
+        # sleep(0.5)
         pass
 
     def close(self):
