@@ -43,11 +43,7 @@ def game_get_fb():
     """
     Flatten the board into 1D space for stable-baselines3 algorithms to work        
     """
-    bb = np.flip(board, 0)
-    flat = np.zeros((42, ), dtype=int)
-    for row in range(len(bb)):
-        for col in range(len(bb)):
-            np.append(flat, bb[row][col])
+    flat = np.flip(board, 0).flatten()
     return flat
 
 

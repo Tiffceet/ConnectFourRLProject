@@ -4,8 +4,6 @@ import numpy as np
 from typing import Optional
 import pygame
 from time import sleep
-
-
 class ConnectFourEnv(gym.Env):
     def __init__(self):
         """
@@ -26,8 +24,11 @@ class ConnectFourEnv(gym.Env):
         self.__board = np.zeros((6, 7))
         self.__current_player = 1
         self.__flipped = False
+        self.__invalid_action_counter = 0
+        self.win = 0
+        self.lose = 0
 
-    def get_flatten_board(self, flip_players = False):
+    def get_flatten_board(self, flip_players=False):
         """
         Flatten the board into 1D space for stable-baselines3 algorithms to work        
         """
@@ -58,10 +59,10 @@ class ConnectFourEnv(gym.Env):
         # Do nothing if the AI placed pieces at invalid action
         if not self.is_valid_action(action):
             reward = -10
-            # self.__invalid_action_counter += 1
-            # if self.__invalid_action_counter > 20:
+            self.__invalid_action_counter += 1
+            if self.__invalid_action_counter > 20:
+                return self.get_flatten_board(self.__flipped), reward, True, {}
             return self.get_flatten_board(self.__flipped), reward, done, {}
-            # return self.get_flatten_board(), reward, done, {}
 
         # Check and perform action
         for index in list(reversed(range(6))):
@@ -74,10 +75,13 @@ class ConnectFourEnv(gym.Env):
             reward = 0.5
         # Else Check for win
         elif self.check_win():
-            if self.__current_player == 1:
-                reward = 1
-            else:
-                reward = -1
+            self.win += 1
+            reward = 1
+            done = True
+        # Check if opponent can win next move
+        elif self.check_future_win():
+            self.lose += 1
+            reward = -1
             done = True
 
         self.__current_player = -self.__current_player
@@ -93,6 +97,17 @@ class ConnectFourEnv(gym.Env):
             if self.is_valid_action(x):
                 moves = np.append(moves, x)
         return moves
+
+    def check_future_win(self):
+        for action in range(7):
+            bb = self.__board.copy()
+            for index in list(reversed(range(6))):
+                if bb[index][action] == 0:
+                    bb[index][action] = -self.__current_player
+                    break
+            if self.check_win_ind(bb):
+                return True
+        return False
 
     def check_win(self) -> bool:
         """
@@ -135,6 +150,47 @@ class ConnectFourEnv(gym.Env):
 
         return False
 
+    def check_win_ind(self, board) -> bool:
+        """
+        Checks if the board have any winning players
+        """
+
+        # Test rows
+        for i in range(6):
+            for j in range(7 - 3):
+                value = sum(board[i][j:j + 4])
+                if abs(value) == 4:
+                    return True
+
+        # Test columns on transpose array
+        reversed_board = [list(i) for i in zip(*board)]
+        for i in range(7):
+            for j in range(6 - 3):
+                value = sum(reversed_board[i][j:j + 4])
+                if abs(value) == 4:
+                    return True
+
+        # Test diagonal
+        for i in range(6 - 3):
+            for j in range(7 - 3):
+                value = 0
+                for k in range(4):
+                    value += board[i + k][j + k]
+                    if abs(value) == 4:
+                        return True
+
+        reversed_board = np.fliplr(board)
+        # Test reverse diagonal
+        for i in range(6 - 3):
+            for j in range(7 - 3):
+                value = 0
+                for k in range(4):
+                    value += reversed_board[i + k][j + k]
+                    if abs(value) == 4:
+                        return True
+
+        return False
+
     def reset(self):
         """
         Reset the board
@@ -142,6 +198,7 @@ class ConnectFourEnv(gym.Env):
         """
         self.__board = np.zeros((6, 7))
         self.__current_player = 1
+        self.__invalid_action_counter = 0
         return self.get_flatten_board()
 
     def draw_board(self, board):
@@ -149,7 +206,8 @@ class ConnectFourEnv(gym.Env):
         BLACK = (0, 0, 0)
         RED = (255, 0, 0)
         YELLOW = (255, 255, 0)
-
+        pygame.init()
+        myfont = pygame.font.SysFont("monospace", 75)
         ROW_COUNT = 6
         COLUMN_COUNT = 7
 
@@ -185,13 +243,25 @@ class ConnectFourEnv(gym.Env):
                     pygame.draw.circle(screen, YELLOW, (int(
                         c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
         pygame.display.update()
+        if self.check_win_ind(board):
+            if self.__current_player == 1:
+                label = myfont.render("Player 1 wins!!", 1, RED)
+                screen.blit(label, (40, 10))
+            else:
+                label = myfont.render("Player 2 wins!!", 1, YELLOW)
+                screen.blit(label, (40, 10))
+            pygame.display.update()
+
+    def get_last_player(self):
+        return self.__current_player
 
     def render(self, mode='human'):
         """
         To render the board.
         """
+        
         self.draw_board(np.flip(self.__board, 0))
-        sleep(0.1)
+        # sleep(0.1)
         pass
 
     def close(self):
