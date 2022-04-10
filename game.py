@@ -11,6 +11,7 @@ from stable_baselines3 import A2C, DQN, PPO
 from stable_baselines3.common.vec_env import VecFrameStack
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.env_checker import check_env
+from sb3_contrib import ARS
 
 # env = VecFrameStack(env, n_stack=4)
 env = ConnectFourEnv()
@@ -19,7 +20,8 @@ log_path = os.path.join('Training', 'Logs')
 a2c_path = os.path.join('Training', 'Saved Models', 'C4')
 dqn_path = os.path.join('Training', 'Saved Models', 'C4_DQN')
 ppo_path = os.path.join('Training', 'Saved Models', 'C4_PPO')
-ai_model = DQN.load(dqn_path, env=env)
+ars_path = os.path.join('Training', 'Saved Models', 'C4_ARS')
+ai_model = ARS.load(ars_path, env=env)
 
 BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)

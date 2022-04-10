@@ -1,13 +1,11 @@
-from re import match
 from ConnectFourEnv import ConnectFourEnv
-from gym.wrappers import FlattenObservation
-import gym
 import os
-from stable_baselines3 import A2C, DQN, PPO
-from stable_baselines3.common.vec_env import VecFrameStack
-from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3 import DQN
 from stable_baselines3.common.env_checker import check_env
-from random import randint
+from sb3_contrib import ARS
+import matplotlib.pyplot as plt
+
+
 # env = VecFrameStack(env, n_stack=4)
 env = ConnectFourEnv()
 # env = FlattenObservation(env)
@@ -15,40 +13,36 @@ log_path = os.path.join('Training', 'Logs')
 a2c_path = os.path.join('Training', 'Saved Models', 'C4')
 dqn_path = os.path.join('Training', 'Saved Models', 'C4_DQN')
 ppo_path = os.path.join('Training', 'Saved Models', 'C4_PPO')
+ars_path = os.path.join('Training', 'Saved Models', 'C4_ARS')
 
-def verifyEnv():
-    check_env(env, warn=True)
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 def train():
-    # model = A2C('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
-    # model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
     # model = DQN('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
-    # model = A2C.load(a2c_path, env=env)
-    model = DQN.load(dqn_path, env=env)
-    model.learn(total_timesteps=1)
-    model.save(dqn_path)
+    model = ARS('LinearPolicy', env, verbose=1, tensorboard_log=log_path)
+
+    model.learn(total_timesteps=50000000)
+    model.save(ars_path)
 
 
-def load_model():
-    model = DQN.load(dqn_path, env=env)
-    print(model.predict([0]*42))
-
-def sample_game():
-    model = DQN.load(dqn_path, env=env)
+def sample_game(model_a, model_b, plot_x, plot_y):
     match_count = 0
     win = 0
     lose = 0
-    while match_count <= 10000:
+    while match_count < 100:
         while True:
-            action = model.predict(env.get_flatten_board())[0]
+            action = model_a.predict(env.get_flatten_board())[0]
             env.step(action)
             env.render()
 
             if env.check_win():
                 break
 
-            p_move = randint(0, 6)
+            if env.check_draw():
+                break
+
+            p_move = model_b.predict(env.get_flatten_board(True))[0]
             env.step(p_move)
             env.render()
 
@@ -61,11 +55,25 @@ def sample_game():
         match_count += 1
         env.reset()
         print(f"Win: {win} | Lose: {lose}")
-    input()
 
-# verifyEnv()
-sample_game()
-# train() 
-# model = PPO.load(ppo_path, env=env)
-# model = DQN.load(dqn_path, env=env)
-# print(evaluate_policy(model, env, n_eval_episodes=10, render=True))
+        plot_x.append(match_count)
+        plot_y.append(win)
+
+
+# train()
+ars_model = ARS.load(ars_path, env=env)
+dqn_model = DQN.load(dqn_path, env=env)
+
+ars_plot_x = []
+ars_plot_y = []
+dqn_plot_x = []
+dqn_plot_y = []
+
+sample_game(ars_model, dqn_model, ars_plot_x, ars_plot_y)
+plt.plot(ars_plot_x, ars_plot_y, color='r', label='ARS as first player')
+sample_game(dqn_model, ars_model, dqn_plot_x, dqn_plot_y)
+plt.plot(dqn_plot_x, dqn_plot_y, color='b', label='DQN as first player')
+plt.xlabel('Round')
+plt.ylabel('Win Rate')
+plt.legend()
+plt.show()

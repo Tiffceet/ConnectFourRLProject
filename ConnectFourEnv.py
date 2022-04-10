@@ -4,6 +4,8 @@ import numpy as np
 from typing import Optional
 import pygame
 from time import sleep
+
+
 class ConnectFourEnv(gym.Env):
     def __init__(self):
         """
@@ -85,6 +87,11 @@ class ConnectFourEnv(gym.Env):
 
     def is_valid_action(self, action: int) -> bool:
         return self.__board[0][action] == 0
+
+    def check_draw(self):
+        if np.count_nonzero(self.__board[0]) == 7:
+            return True
+        return False
 
     def get_available_moves(self):
         moves = np.array([], dtype=int)
@@ -254,7 +261,7 @@ class ConnectFourEnv(gym.Env):
         """
         To render the board.
         """
-        
+
         self.draw_board(np.flip(self.__board, 0))
         # sleep(0.5)
         pass
